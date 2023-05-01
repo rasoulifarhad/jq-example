@@ -4,6 +4,15 @@ See [JSON object values into CSV with jq](https://qmacro.org/blog/posts/2022/05/
 
 ### Recap
 
+#### Processing JSON with jq
+
+In the "Invoking jq" section of the [manual](https://stedolan.github.io/jq/manual/), it says:
+
+> jq filters run on a stream of JSON data. The input to jq is parsed as a sequence of </br>
+> whitespace-separated JSON values which are passed through the provided filter one at </br>
+> a time. The output(s) of the filter are written to standard out, again as a sequence </br>
+> of whitespace-separated JSON data. </br>
+
 #### Basic filters
 
 > Identity: .
@@ -20,11 +29,19 @@ See [JSON object values into CSV with jq](https://qmacro.org/blog/posts/2022/05/
 
 > Array/Object Value Iterator: .[]
 
+  > echo '{"array":[1,2]}' | jq '.array[]'
+  > echo '{"object":{"a":1,"b":2}}' | jq '.object[]'
+
 > .[]? Like .[], but no errors will be output if . is not an array or object.
 
 > Comma: ,
+ 
+  > echo '1 2' | jq '[0,.]'
+  > echo '1 2' | jq '{x:.,y:(2*.)}'
 
 > Pipe: |
+
+> map : map(x) is equivalent to [.[] | x]. In fact, this is how it's defined.
 
 #### Types and Values
 
@@ -49,6 +66,246 @@ See [Regular expressions (PCRE)](https://stedolan.github.io/jq/manual/#Regularex
 #### Advanced features
 
 See [Advanced features](https://stedolan.github.io/jq/manual/#Advancedfeatures)
+
+#### Try this
+
+1. 
+
+```
+echo '{"array":[1,2]}' | jq '.array[]'
+
+Response:
+
+1
+2
+
+```
+
+2. 
+
+```
+echo '{"object":{"a":1,"b":2}}' | jq '.object[]'
+
+Response:
+
+1
+2
+
+```
+
+3. 
+
+```
+echo '1 2' | jq -c '[0,.]'
+
+Response:
+
+[0,1]
+[0,2]
+
+```
+
+4. 
+
+```
+echo '1 2' | jq -c '{x:.,y:(2*.)}'
+
+Response:
+
+{"x":1,"y":2}
+{"x":2,"y":4}
+
+```
+
+5. 
+
+```
+echo '1 2 3' | jq .+1
+
+Response:
+
+2
+3
+4
+
+```
+
+6. 
+
+```
+echo '1 2 3' | jq add
+
+Response:
+
+jq: error (at <stdin>:1): Cannot iterate over number (1)
+jq: error (at <stdin>:1): Cannot iterate over number (2)
+jq: error (at <stdin>:1): Cannot iterate over number (3)
+
+```
+
+7. 
+
+```
+echo '1 2 3' | jq -s add
+
+Response:
+
+6
+
+```
+
+It transforms the input from a sequence of discrete values (numbers) into a single composite value (an array of numbers).
+ 
+``` 
+echo '1 2 3' | jq -s .
+
+Response:
+
+[
+  1,
+  2,
+  3
+]
+```
+
+But this:
+
+```
+echo '1 2 3' | jq  .
+
+Response:
+
+1
+2
+3
+
+```
+
+8. ( echo '[1,2,3]' | jq add  ) == ( echo '1 2 3' | jq -s add	 )
+
+```
+echo '[1,2,3]' | jq add
+
+Response:
+
+6
+
+```
+
+9. 
+
+```
+echo '[1,2,3] [4,5,6]' | jq add
+
+Response:
+
+6
+15
+
+```
+
+10. 
+
+```
+echo '[1,2,3] [4,5,6]' | jq '[add] | add'
+
+Response:
+
+6
+15
+
+```
+
+11. 
+
+```
+echo '[1,2,3] [4,5,6]' | jq '[add]'
+
+Response:
+
+[
+  6
+]
+[
+  15
+]
+
+```
+
+12.  
+
+```
+echo '[1,2,3] [4,5,6]' | jq -s '[.[] | add]'
+
+Response:
+
+[
+  6,
+  15
+]
+
+```
+
+13. 
+
+````
+echo '[1,2,3] [4,5,6]' | jq -s '[.[] | add]  | add'
+
+Response:
+
+21
+
+```
+
+14. 
+
+```
+echo '[1,2,3] [4,5,6]' | jq -n 'reduce inputs as $array (0; .+($array|add))'
+
+Response:
+
+21
+
+```
+
+> map(x) is equivalent to [.[] | x]. In fact, this is how it's defined.
+
+15. 
+
+```
+echo '[1,2,3] [4,5,6]' | jq -s 'map(add) | add'
+
+Response:
+
+21
+
+```
+
+
+15. 
+
+```
+seq 3 | jq '.'
+seq 3 | jq -c '.'
+seq 3 | jq -c -s '.'
+seq 3 | jq  -s add
+
+```
+
+See [introducing-zq](https://www.brimdata.io/blog/introducing-zq/)
+See [zq](https://zed.brimdata.io/docs/commands/zq/)
+
+**Recap** JSON values:
+
+- object
+- array
+- string
+- number
+- "true"
+- "false"
+- "null"
+  
+See [Introducing JSON](https://www.json.org/json-en.html)
 
 #### Dataset
 
